@@ -1,0 +1,30 @@
+# An everything+kitchen-sink baseline package list for RL
+numpy
+opencv-python-headless
+matplotlib
+scikit-learn
+pandas
+seaborn
+pytest
+tensorboard-plugin-customizable-plots
+tqdm
+plotly
+gif
+moviepy
+ffmpeg-python
+ray[all]==2.9.2
+optuna
+gymnasium
+pettingzoo
+stable-baselines3
+rl_zoo3
+sb3-contrib
+sbx-rl
+# wandb
+# mlflow
+# huggingface-sb3
+tinyscaler
+supersuit
+autorom
+flappy-bird-gymnasium==0.3.0
+git+https://github.com/Farama-Foundation/stable-retro.git@fbneo
