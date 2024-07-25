@@ -60,15 +60,16 @@ callbacks = make_multi_callbacks(callback_list)
 # those methods back in with EpisodeV3. There's several ways to write callbacks either way but I digress, /rant.
 # https://github.com/ray-project/ray/issues/37319
 config = (  # 1. Configure the algorithm,
-    AlgorithmConfig() # FIXME: put the actual config object for the algorithm you intend to use (Such as PPO or DQN)
+    PPOConfig() # FIXME: put the actual config object for the algorithm you intend to use (Such as PPO or DQN)
     .environment('flappybird', env_config={'render_mode': 'rgb_array'})
     .experimental(_enable_new_api_stack=False)
-    .rollouts(
-        num_rollout_workers=num_rollout_workers,
-        batch_mode='truncate_episodes',
-        enable_connectors=False
-        )
-    .resources(num_gpus=num_gpus)
+    # .rollouts( # depreciated
+    #     num_rollout_workers=num_rollout_workers,
+    #     batch_mode='truncate_episodes',
+    #     enable_connectors=False
+    #     )
+    .env_runners(num_env_runners=num_rollout_workers, batch_mode='truncate_episodes', enable_connectors=False)
+    # .resources(num_gpus=num_gpus)
     .framework("tf2", eager_tracing=True)
     .training(
         # TODO: Put hyperparams here as needed. Look in the AlgorithmConfig object and child object for available params
@@ -76,15 +77,15 @@ config = (  # 1. Configure the algorithm,
         )
     .evaluation(evaluation_num_workers=num_eval_workers, evaluation_interval=10)
     .callbacks(callbacks)
-    .reporting(keep_per_episode_custom_metrics=False) # decides whether custom metrics in Tensorboard are per episode or mean/min/max
+    # .reporting(keep_per_episode_custom_metrics=False) # decides whether custom metrics in Tensorboard are per episode or mean/min/max
 )
 
 
 tuner = tune.Tuner(
-    "FIXME", # FIXME: Put the name that matches your alg name such as 'PPO' or 'DQN'
+    "PPO", # FIXME: Put the name that matches your alg name such as 'PPO' or 'DQN'
     run_config=train.RunConfig(
-        name='Lab8FlappyBirdFIXME', # FIXME: Name this something reasonable
-        local_dir=ray_results,
+        name='Fixed', # FIXME: Name this something reasonable
+        storage_path=ray_results,
         stop={
             # "episode_reward_mean": 100, # another example of stopping criteria
             'training_iteration': training_iterations,
@@ -101,10 +102,3 @@ tuner = tune.Tuner(
     )
 
 results = tuner.fit()
-df = results.get_dataframe()
-print('Results DataFrame:\n', df)
-print('Total steps trained: ', df['num_agent_steps_trained'])
-print('Best checkpoint path:')
-print()
-print(results.get_best_result(metric='episode_reward_mean').checkpoint.path)
-print()

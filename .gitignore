@@ -162,3 +162,4 @@ cython_debug/
 replays/
 archive/
 ray_results/
+*.mp4

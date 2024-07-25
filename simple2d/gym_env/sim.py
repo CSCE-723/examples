@@ -33,6 +33,11 @@ class Simple2DSim:
         else:
             raise ValueError("Invalid turn action")
 
+        if self.heading < 0:
+            self.heading += 2 * np.pi
+        elif self.heading >= 2 * np.pi:
+            self.heading -= 2 * np.pi
+
         # Update velocity
         if speed_change == 0:  # slow down
             self.velocity = max(0, self.velocity - self.dV)
@@ -42,6 +47,7 @@ class Simple2DSim:
         # Update position
         self.position[0] += self.velocity * np.cos(self.heading) * self.dt
         self.position[1] += self.velocity * np.sin(self.heading) * self.dt
+        self.position = np.clip(self.position, -10, 10) # Clip position to be within [-10, 10] walls
 
         return self._get_state()
 

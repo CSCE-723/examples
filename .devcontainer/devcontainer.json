@@ -63,6 +63,8 @@
 		"type=bind,source=${localWorkspaceFolder},target=/opt/project",
 		"type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/developer/.ssh,readonly"
 	]
+	// "runArgs": ["--shm-size=20gb"]
+	
 	// "features": {
 	// 	"ghcr.io/devcontainers/features/nvidia-cuda:1": {
 	// 		"installCudnn": true,

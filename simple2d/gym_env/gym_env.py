@@ -1,7 +1,7 @@
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
-from sim import Simple2DSim
+from .sim import Simple2DSim
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, RegularPolygon, Circle
 import io
@@ -14,19 +14,21 @@ class Simple2DEnv(gym.Env):
         super().__init__()
         self.horizon = config.get('horizon', 500)
         self.goal_distance = config.get('goal_distance', 1)
+        self.render_mode = config.get('render_mode', 'rgb_array')
         self.sim = Simple2DSim(config)
-        self.action_space = spaces.MultiDiscrete([3, 2])  # 0: turn left, 1: turn right, 2: no turn
+        self.action_space = spaces.MultiDiscrete([3, 2])  # [(0: turn left, 1: turn right, 2: no turn), (0: decrease speed, 1: increase speed)] 
         self.observation_space = spaces.Box(
-            low=np.array([-10, -10, 0]), 
-            high=np.array([10, 10, 2 * np.pi]), 
+            low=np.array([-10, -10, 0, 0]), # [x, y, heading, velocity]
+            high=np.array([10, 10, 2 * np.pi, np.finfo(np.float32).max]), 
             dtype=np.float32
         )
         self.step_count = 0
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         self.step_count = 0
         self.state = self.sim.reset()
-        return np.array([self.state['position'][0], self.state['position'][1], self.state['heading']], dtype=np.float32)
+        obs = np.array([self.state['position'][0], self.state['position'][1], self.state['heading'], self.state['velocity']], dtype=np.float32)
+        return obs, {}
 
     def step(self, action):
         self.step_count += 1
@@ -36,11 +38,12 @@ class Simple2DEnv(gym.Env):
 
         position = self.state['position']
         heading = self.state['heading']
-        terminated = np.linalg.norm(position) < self.goal_distance or np.max(np.abs(position)) > 10  # Consider done if within 0.1 units of the origin or too far
+        velocity = self.state['velocity']
+        terminated = np.linalg.norm(position) < self.goal_distance or np.max(np.abs(position)) >= 10  # Consider done if within 0.1 units of the origin or too far
         reward = -np.linalg.norm(position)  # Negative distance to the origin as reward
         truncated = self.step_count >= self.horizon 
-
-        return np.array([position[0], position[1], heading], dtype=np.float32), reward, terminated, truncated, {}
+        obs = np.array([position[0], position[1], heading, velocity], dtype=np.float32)
+        return obs, reward, terminated, truncated, {}
 
     def render(self):
         fig, ax = plt.subplots()
@@ -62,6 +65,19 @@ class Simple2DEnv(gym.Env):
         ax.add_patch(triangle)
         ax.add_patch(goal_circle)
 
+        # Draw walls around the -10 to 10 boundary in x and y
+        wall_color = 'red'
+        wall_thickness = 0.1
+        walls = [
+            plt.Line2D([-10, -10], [-10, 10], color=wall_color, linewidth=wall_thickness),  # Left wall
+            plt.Line2D([10, 10], [-10, 10], color=wall_color, linewidth=wall_thickness),    # Right wall
+            plt.Line2D([-10, 10], [-10, -10], color=wall_color, linewidth=wall_thickness),  # Bottom wall
+            plt.Line2D([-10, 10], [10, 10], color=wall_color, linewidth=wall_thickness)     # Top wall
+        ]
+        for wall in walls:
+            ax.add_line(wall)
+
+
         # Convert plot to RGB array
         buf = io.BytesIO()
         plt.savefig(buf, format='png')
@@ -75,17 +91,3 @@ class Simple2DEnv(gym.Env):
     def close(self):
         pass
 
-# Example
-if __name__ == "__main__":
-    import moviepy.editor as mpy
-    env = Simple2DEnv()
-    obs = env.reset()
-    terminated = truncated = False
-    img_list = []
-    while not terminated or truncated:
-        action = env.action_space.sample()  # Random action for testing
-        obs, reward, terminated, truncated, info = env.step(action)
-        img_list.append(env.render())
-        print(f"Obs: {obs}, Reward: {reward}, Terminated: {terminated}, Truncated: {truncated}")
-    clip = mpy.ImageSequenceClip(img_list, fps=30)
-    clip.write_videofile('example.mp4', logger=None)

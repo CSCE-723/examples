@@ -37,7 +37,7 @@ class SaveReplayCallback(DefaultCallbacks):
                     default -- '.mp4'
         """
 
-        super().__init__(legacy_callbacks_dict)
+        super().__init__()
         self.record_mode = replay_config.get('record_mode', 'off')
         self.base_folder = replay_config.get('replay_folder', './replays')
         self.file_type = replay_config.get('file_type', '.mp4')
@@ -118,7 +118,7 @@ class RestoreWeightsCallback(DefaultCallbacks):
     """Starts algorithm in tune trial with a previous set of policy_weights (this is buggy)"""
     def __init__(self, algorithm_weights = None, legacy_callbacks_dict: Dict[str, Any] = None):
         self.algorithm_weights = algorithm_weights
-        super().__init__(legacy_callbacks_dict)
+        super().__init__()
 
     def on_algorithm_init(self, *, algorithm: "Algorithm", **kwargs) -> None:
         algorithm.set_weights(self.algorithm_weights)
@@ -128,12 +128,12 @@ class FlapActionMetricCallback(DefaultCallbacks):
     """Keeps track of actions taken, saves a ratio (percentage-like) of actions that were flaps as a custom metric 'flap_ratio'"""
     def __init__(self, report_hist = False, legacy_callbacks_dict: Dict[str, Any] = None):
         self.report_hist = report_hist
-        super().__init__(legacy_callbacks_dict)
+        super().__init__()
 
     def on_episode_step(self, *, worker: RolloutWorker, base_env: BaseEnv, policies: Dict[PolicyID, Policy] | None = None, episode: Episode | EpisodeV2, env_index: int | None = None, **kwargs) -> None:
         # TODO: get the last action taken, make a custom metric
         # Hints: use a method from the 'episode' object in the args
-        action = 0 # FIXME: get the action the agent took
+        action = episode.last_action_for()
 
         # Store this in an ongoing list in the 'user_data' of episode
         # this is a way to do a psuedo singleton thing on a python dictionary
@@ -146,8 +146,8 @@ class FlapActionMetricCallback(DefaultCallbacks):
         if action_list:
             if self.report_hist:
                 episode.hist_data['flap_hist'] = action_list
-            flap_ratio = 0.0 # FIXME: calculate flap_ratio
-            episode.custom_metrics['flap_ratio'] = flap_ratio 
+            flap_ratio = sum(action_list)/len(action_list) # TODO: calculate flap_ratio
+            episode.custom_metrics['flap_ratio'] = flap_ratio
         else:
             print('WARNING: There were no actions in the episode.user_data list!')
         
@@ -156,7 +156,9 @@ class CustomScoreCallback(DefaultCallbacks):
     """Saves the end of episode "score" as a custom metric"""
     def on_episode_end(self, *, worker: RolloutWorker, base_env: BaseEnv, policies: Dict[PolicyID, Policy], episode: Episode | EpisodeV2 | Exception, env_index: int | None = None, **kwargs) -> None:
         # HINT: this method is all you need to save score as a custom metric
-        pass # FIXME: write code in place of pass
+        info = episode.last_info_for()
+        score = info.get('score', 0)
+        episode.custom_metrics['score'] = score
 
 # Helper functions (for recorder--student does not need this)
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
