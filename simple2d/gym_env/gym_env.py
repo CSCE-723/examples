@@ -8,13 +8,16 @@ import io
 from PIL import Image
 
 class Simple2DEnv(gym.Env):
-    metadata = {'render.modes': ['human', 'rgb_array']}
+    metadata = {
+        'render_modes': ['human', 'rgb_array'],
+        'render_fps': 30
+        }
 
-    def __init__(self, config={}):
+    def __init__(self, render_mode='rgb_array', config={}):
         super().__init__()
         self.horizon = config.get('horizon', 500)
         self.goal_distance = config.get('goal_distance', 1)
-        self.render_mode = config.get('render_mode', 'rgb_array')
+        self.render_mode = config.get('render_mode', render_mode)
         self.sim = Simple2DSim(config)
         self.action_space = spaces.MultiDiscrete([3, 2])  # [(0: turn left, 1: turn right, 2: no turn), (0: decrease speed, 1: increase speed)] 
         self.observation_space = spaces.Box(
@@ -82,11 +85,15 @@ class Simple2DEnv(gym.Env):
         buf = io.BytesIO()
         plt.savefig(buf, format='png')
         buf.seek(0)
-        img = Image.open(buf)
+        img = Image.open(buf).convert('RGB')
         rgb_array = np.array(img)
 
         plt.close(fig)
-        return rgb_array
+
+        if self.render_mode == 'rgb_array':
+            return rgb_array
+        elif self.render_mode == 'human':
+            plt.show()
 
     def close(self):
         pass
