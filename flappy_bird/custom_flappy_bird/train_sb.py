@@ -19,7 +19,7 @@ from utils.sb3_callbacks import (  # noqa: F401
 from stable_baselines3.common.callbacks import EvalCallback
 
 num_cpu = 10
-total_timesteps = 1e7
+total_timesteps = 1e6
 tensorboard_log = \
     pathlib.Path(__file__).parent.parent.resolve().joinpath('tblogs')
 models_dir = pathlib.Path(__file__).parent.parent.resolve().joinpath('models')

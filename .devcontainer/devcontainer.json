@@ -65,7 +65,7 @@
 	],
 	"runArgs": [
 		"--shm-size=20gb",
-		"--gpus=all",
+		"--gpus=all"
 	]
 	
 	// "features": {
