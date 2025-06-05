@@ -39,13 +39,15 @@ class Simple2DEnv(gym.Env):
         position = self.state['position']
         heading = self.state['heading']
         velocity = self.state['velocity']
-        terminated = np.linalg.norm(position) < self.goal_distance or np.max(np.abs(position)) >= 10  # Consider done if within 0.1 units of the origin or too far
+        terminated = bool(np.linalg.norm(position) < self.goal_distance or np.max(np.abs(position)) >= 10)  # Consider done if within 0.1 units of the origin or too far
         reward = -np.linalg.norm(position)  # Negative distance to the origin as reward
         truncated = self.step_count >= self.horizon 
         obs = np.array([position[0], position[1], heading, velocity], dtype=np.float32)
         return obs, reward, terminated, truncated, {}
 
     def render(self):
+        if self.render_mode != 'rgb_array':
+            return None
         fig, ax = plt.subplots()
         ax.set_xlim(-15, 15)
         ax.set_ylim(-15, 15)

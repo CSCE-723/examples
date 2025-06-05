@@ -163,3 +163,4 @@ replays/
 archive/
 ray_results/
 *.mp4
+*_logs/

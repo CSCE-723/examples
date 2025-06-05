@@ -1,4 +1,4 @@
-import moviepy.editor as mpy
+import moviepy as mpy
 from gym_env.gym_env import Simple2DEnv
 
 env = Simple2DEnv()
