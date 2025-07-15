@@ -169,3 +169,4 @@ models/
 monitor/
 *.zip
 events.*
+*_tensorboard/
