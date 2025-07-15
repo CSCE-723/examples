@@ -167,3 +167,5 @@ ray_results/
 wandb/
 models/
 monitor/
+*.zip
+events.*

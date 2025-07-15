@@ -1,94 +1,75 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
-	// // CHOOSE OPTION 1 OR 2 and only leave one uncommented
-	//////////////////////////////////////////////////////////////////////////////
-	// // OPTION 1 * Uncomment this block to build the image from scratch
-	// "name": "From Dockerfile",
-	// "build": {
-	// 	// Sets the run context to one level up instead of the .devcontainer folder.
-	// 	"context": ".",
-	// 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	// 	"dockerfile": "Dockerfile"
-	// },
-	//////////////////////////////////////////////////////////////////////////////
+    // This file contains the devcontainer configuration used to create the Docker container for the TensorFlow GPU Development environment.
+    // For more information, see the documentation: https://code.visualstudio.com/docs/remote/docker#_customize-the-devcontainerjson-schema
+    // For more information on the Dockerfile used to create the container, see the Dockerfile
+    // This functionally passes arguments to `docker run` and `docker build` commands.
+    // It also includes settings for Visual Studio Code, such as extensions to install and settings to apply.
+    "name": "AI/ML Dev - ${localWorkspaceFolderBasename}${localEnv:HOSTNAME}",
+    // "dockerComposeFile": "docker-compose.yml",
+    // "service": "dev",
+    //////////////
+    // Change the following to the appropriate tag,
+    // e.g. "latest", "latest-rl", "1.1", "1.1-rl", etc.
+    "image": "afitaitrec/afitaitrec:latest-rl",
+    //////////////
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+        // Mount SSH folder for Linux hosts
+        // "source=${env:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+    ],
+    //////////////
+    // Comment out the following to not use the NVIDIA runtime.
+    // This is required for GPU support.
+    "runArgs": [
+        // Use the NVIDIA runtime for GPU support
+        "--gpus", "all",
+        // Increase the shared memory size to avoid issues with large datasets
+        "--shm-size", "8g", // Recommended at 1/3-1/2 of the host RAM
+        // Set some environment variables to allow X11 forwarding on Linux hosts
+           "-e", "DISPLAY",
+           "-v", "/tmp/.X11-unix:/tmp/.X11-unix"
+    ],
 
-	//////////////////////////////////////////////////////////////////////////////
-	// // OPTION 2 * Uncomment the 2 lines below to start from the image instead of building
-	"name": "From Image",
-	"image": "afitaitrec/afitaitrec:latest-rl",
-	//////////////////////////////////////////////////////////////////////////////
-	
-	// Customize vscode settings nad extensions in the devcontainer
-	"customizations": {
-		"vscode": {
-			"settings": {
-				"terminal.integrated.shell.linux": "/bin/bash",
-				"todo-tree.regex.regex": "(//|#|<!--|;|/\\*|^|^\\s*(-|\\d+.))\\s*($TAGS)",
-				"todo-tree.general.tags": [
-				"BUG",
-				"HACK",
-				"FIXME",
-				"TODO",
-				"NOTE",
-				"[ ]",
-				"[x]"
-				],
-				"todo-tree.highlights.customHighlight": {
-					"[ ]": {
-						"background": "#ff000080"
-					},
-					"[x]": {
-						"background": "#00ff0080"
-					},
-					"NOTE": {
-						"background": "#0000ff80"
-					}
-				}
-			},
-			"extensions": [
-				"ms-python.python",
-				// Git
-				"eamodio.gitlens",
-				// Other helpers
-				"stkb.rewrap", // rewrap comments after n characters on one line
-				// Other
-				"vscode-icons-team.vscode-icons",
-				"streetsidesoftware.code-spell-checker",
-				"gruntfuggly.todo-tree"
-			]
-		}
-	},
-	"mounts": [
-		"type=bind,source=${localWorkspaceFolder},target=/opt/project",
-		"type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/developer/.ssh,readonly"
-	],
-	"runArgs": [
-		"--shm-size=20gb",
-		"--gpus=all"
-	]
-	
-	// "features": {
-	// 	"ghcr.io/devcontainers/features/nvidia-cuda:1": {
-	// 		"installCudnn": true,
-	// 		"installNvtx": true,
-	// 		"cudaVersion": "11.8",
-	// 		"cudnnVersion": "8.6.0.163"
-	// 	}
-	// }
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "devcontainer"
+    //////////////
+    // Uncomment the following lines to use a user (vscode),
+    // Comment them out to use the root user.
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+    //////////////
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python3",
+                // Comment out if the python linting is annoying (ie. too many warnings)
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "python.linting.flake8Enabled": true,
+                "python.linting.pylintArgs": ["--max-line-length=88"],
+                "flake8.args": ["--max-line-length=88"], // for black compatibility
+                "jupyter.alwaysTrustNotebooks": true,
+                // Set Python working directory to VS Code workspace folder
+                // "python.envFile": "${workspaceFolder}/.env",
+                "python.terminal.executeInFileDir": false,
+                "python.terminal.cwd": "${workspaceFolder}",
+                // Comment this out if you don't want to use the black formatter
+                "[python]": {
+                    "editor.defaultFormatter": "ms-python.black-formatter",
+                    "editor.formatOnSave": true
+                }
+            },
+            "extensions": [
+                "ms-python.python",
+                "vscode-icons-team.vscode-icons",
+                "ms-toolsai.jupyter",
+                "gruntfuggly.todo-tree",
+                "ms-python.debugpy",
+                "ms-azuretools.vscode-docker",
+                "ms-python.black-formatter",
+                "ms-python.flake8",
+                "njpwerner.autodocstring",
+                "mechatroner.rainbow-csv"
+            ]
+        }
+    }
 }
