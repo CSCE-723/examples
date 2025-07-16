@@ -2,11 +2,12 @@
 Train a policy for the TankEnv using stable_baselines3 PPO with
 Weights & Biases, logging, periodic checkpointing, and vectorized envs.
 """
+
 import os
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.callbacks import CheckpointCallback
-from stable_baselines3.common.vec_env import VecVideoRecorder
+# from stable_baselines3.common.vec_env import VecVideoRecorder
 from stable_baselines3.common.env_util import make_vec_env
 from gym_env.gym_env import Simple2DEnv
 from stable_baselines3.common.logger import configure
@@ -15,36 +16,34 @@ import wandb
 
 # Run settings:
 total_timesteps = 1_000_000  # Total training steps
+use_wandb = False  # Set to False to disable Weights & Biases logging
 
 # Set up directories
 log_dir = "./sb3_logs"
 ckpt_dir = os.path.join(log_dir, "checkpoints")
-wandb_dir = os.path.join(log_dir, "wandb")
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(ckpt_dir, exist_ok=True)
-os.makedirs(wandb_dir, exist_ok=True)
-
-# Initialize wandb run before training
-wandb_run = wandb.init(
-    project="simple2d_sb3",
-    name="ppo_simple2d_run",
-    dir=wandb_dir,
-    sync_tensorboard=True,
-    monitor_gym=True,
-    save_code=True,
-)
-
-# Only initialize wandb in the main process, let WandbCallback handle run logic
-# (Do not call wandb.init() here)
+if use_wandb:
+    wandb_dir = os.path.join(log_dir, "wandb")
+    os.makedirs(wandb_dir, exist_ok=True)
+    # Initialize wandb run before training
+    wandb_run = wandb.init(
+        project="simple2d_sb3",
+        # name="ppo_simple2d_run",
+        dir=wandb_dir,
+        sync_tensorboard=True,
+        monitor_gym=True,
+        save_code=True,
+    )
 
 # Create vectorized environment (10 parallel envs) using make_vec_env
 num_envs = 10
 env = make_vec_env(
     Simple2DEnv,
     n_envs=num_envs,
-    env_kwargs={'config':{"render_mode": None}},
+    env_kwargs={"config": {"render_mode": None}},
     vec_env_cls=None,  # Use default (SubprocVecEnv if n_envs > 1)
-    monitor_dir=log_dir,  # Needed for video recording
+    monitor_dir=log_dir,
 )
 
 # Optionally wrap with VecVideoRecorder for periodic video saving
@@ -62,7 +61,7 @@ env = make_vec_env(
 check_env(Simple2DEnv(), warn=True)
 
 # Set up SB3 logger to use TensorBoard (for wandb sync)
-new_logger = configure(log_dir, ['stdout', 'tensorboard'])
+new_logger = configure(log_dir, ["stdout", "tensorboard"])
 
 # Set up checkpoint callback
 checkpoint_callback = CheckpointCallback(
@@ -73,28 +72,29 @@ checkpoint_callback = CheckpointCallback(
     # save_vecnormalize=True,
 )
 
-# Set up WandbCallback for hyperparam/model saving and video upload
-wandb_callback = WandbCallback(
-    # gradient_save_freq=1000,
-    model_save_path=os.path.join(log_dir, "wandb_models"),
-    verbose=2,
-    log="all",
-)
-
 # Instantiate the agent
 model = PPO(
     "MlpPolicy",
     env,
     verbose=1,
     tensorboard_log=log_dir,
-    device='cpu',  # NOTE: comment out this line to use GPU if available
+    device="cpu",  # NOTE: comment out this line to use GPU
 )
 model.set_logger(new_logger)
 
+callbacks = [checkpoint_callback]
+if use_wandb:
+    wandb_callback = WandbCallback(
+        # gradient_save_freq=1000,
+        model_save_path=os.path.join(log_dir, "wandb_models"),
+        verbose=2,
+        log="all",
+    )
+    callbacks.append(wandb_callback)
 # Train the agent
 model.learn(
     total_timesteps=total_timesteps,
-    callback=[checkpoint_callback, wandb_callback],
+    callback=callbacks,
     progress_bar=True,
 )
 

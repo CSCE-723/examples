@@ -8,9 +8,9 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from gym_env.gym_env import Simple2DEnv
 
 # Settings
-model_path = "sb3_logs/checkpoints/ppo_simple2d_100000_steps.zip"
+model_path = "/workspace/sb3_logs/ppo_simple2d_final.zip"
 video_folder = "./sb3_logs/eval_videos"
-num_episodes = 10
+num_episodes = 1
 max_steps = 200
 
 os.makedirs(video_folder, exist_ok=True)
