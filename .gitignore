@@ -1,2 +1,4 @@
 *.pyc
 *.mp4
+*.zip
+*_tensorboard
