@@ -34,8 +34,8 @@
     //////////////
     // Uncomment the following lines to use a user (vscode),
     // Comment them out to use the root user.
-    // "remoteUser": "vscode",
-    // "updateRemoteUserUID": true,
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
     //////////////
     "customizations": {
         "vscode": {
@@ -62,7 +62,7 @@
                 "ms-python.python",
                 "vscode-icons-team.vscode-icons",
                 "ms-toolsai.jupyter",
-                "gruntfuggly.todo-tree",
+                "fanaticpythoner.better-todo-tree",
                 "ms-python.debugpy",
                 "ms-azuretools.vscode-docker",
                 "ms-python.black-formatter",

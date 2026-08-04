@@ -2,3 +2,6 @@
 *.mp4
 *.zip
 *_tensorboard
+sb3_logs/
+rllib_logs/
+.env
